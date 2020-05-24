@@ -16,6 +16,7 @@
 #include "ports.h"
 #include "definitions.h"
 
+
 /*
  * Simple C Test Suite
  */
@@ -27,8 +28,15 @@ int testpass, testfail, testpassglo, testfailglo; //creo estas varibles que son 
 int main(int argc, char** argv) {
     printf("%%SUITE_STARTING%% test\n");
     printf("%%SUITE_STARTED%%\n");
-
-    printf("%%TEST_STARTED%%  testPort_operations (test)\n");
+    
+    testbitset (0x2,FALSE, 'b', 1);     //
+    testbitset(0x2,TRUE,'b',12);
+    testbitset(0x4,TRUE,'f',2);
+    testbitset(0x8000,FALSE,'d',15);
+    testbitset(0x8000,TRUE,'A', 16);
+    
+    
+  
     testPort_operations();
     printf("%%TEST_FINISHED%% time=0 testPort_operations  (test)\n");
 
@@ -38,47 +46,23 @@ int main(int argc, char** argv) {
 }
 
 
-void test_is_valid_ (int espuert,int espbit, int espmask, char port, int data)
+
+
+void testbitset (int esperado,int espvalid, char puerto, int data)
 {
-    printf("%%TEST_STARTED%%  testis_valid_port (test)\n");
     
-    int validpo, validbi,validmk;
-    static n;
-    static int testpass; 
-    static int testfail;
-    
-    n++;
-    validpo = is_a_valid_port(port, data);
-    validbi = is_a_valid_bit(port, data);
-    validmk = is_a_valid_mask(port,data);
-    
-    if (validpo == espuert && validbi == espbit && validmk  == espmask)
-    {
-        testpass++;
-        testpassglo++;
-        
-    }
-    else 
-    {
-        testfail++;
-        testfailglo++;
-        printf("%%TEST_FAILED%% time=0 testname=testis_valid_ %d (test) message=esperado %d, actual %d\n", esperado, valid);
-        
-    }
-    printf("%%TEST_FINISHED%% time=0 testis_valid_ testpass= %d  testfail = %d(test)\n", testpass, testfail);
-
-    
-}
-
-
-void testbitSet (int esperado, char puerto, int data)
-{
     printf("%%TEST_STARTED%%  testbitSet (test)\n");
+    int valid;
     static n;
     static int testpass; 
     static int testfail;
+   
+    p.portD.W = 0;
+   
     n++;
-    bitSet(puerto, data);
+    valid = bitSet(puerto, data);
+    test_is_valid_(espvalid, valid);
+    
     if (esperado == p.portD.W)
     {
         testpass++;
@@ -88,18 +72,22 @@ void testbitSet (int esperado, char puerto, int data)
     {
         testfail++;
         testfailglo++;
-         printf("%%TEST_FAILED%% time=0 testname=testbitSet %d (test) message=esperado %d, actual %d\n",n, esperado, p.portD.W);
+        printf("%%TEST_FAILED%% time=0 testname=testbitSet %d (test) message=esperado %d, actual %d\n",n, esperado, p.portD.W);
     }
      printf("%%TEST_FINISHED%% time=0 testbitSet testpass= %d  testfail = %d(test)\n", testpass, testfail);
 }
-void testbitClear (int esperado, char puerto, int data)
+void testbitClear (int esperado,int espvalid, char puerto, int data)
 {
     printf("%%TEST_STARTED%%  testbitClear (test)\n");
+    int valid;
     static n;
     static int testpass; 
     static int testfail;
     n++;  
-    bitClear (puerto, data);
+    
+    valid = bitClear (puerto, data);
+    test_is_valid_(espvalid, valid);
+   
     if (esperado = p.portD.W)
     {
         testpass++;
@@ -176,4 +164,34 @@ void testmaskOff (int esperado, char puerto, int data)
         printf("%%TEST_FAILED%% time=0 testname=testmaskOff %d (test) message=esperado %d, actual %d\n",n, esperado, p.portD.W);  
     }
     printf("%%TEST_FINISHED%% time=0 testmaskOff testpass= %d  testfail = %d(test)\n", testpass, testfail);
+}
+
+void test_is_valid_ (int esp,int actual)
+{
+    printf("%%TEST_STARTED%%  testis_valid_port (test)\n");
+    
+   
+    static n;
+    static int testpass; 
+    static int testfail;
+    
+    n++;
+   
+    
+    if (esp == actual)
+    {
+        testpass++;
+        testpassglo++;
+        
+    }
+    else 
+    {
+        testfail++;
+        testfailglo++;
+        printf("%%TEST_FAILED%% time=0 testname=testis_valid_ %d (test) message=esperado %d, actual %d\n", esperado, valid);
+        
+    }
+    printf("%%TEST_FINISHED%% time=0 testis_valid_ testpass= %d  testfail = %d(test)\n", testpass, testfail);
+
+    
 }
