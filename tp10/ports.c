@@ -10,7 +10,7 @@ Creado por el grupo 5 en mayo de 2020
 /*PROTOTIPOS DE FUNCIONES INTERNAS*/
 static BOOLEAN is_a_valid_port (char port); //Esta funcion comprueba que el identificador de puerto provisto sea valido
 static BOOLEAN is_a_valid_bit (char port, int bit);	//Dado un puerto valido, esta funcion comprueba si el numero de bit pedido es valido
-static BOOLEAN is_a_valid_mask (char port, int mask) //Dado un puerto y una mascara, esta funcion comprueba si la mascara es adecuada al puerto indicado
+static BOOLEAN is_a_valid_mask (char port, int mask); //Dado un puerto y una mascara, esta funcion comprueba si la mascara es adecuada al puerto indicado
 
 /*FUNCIONES EXTERNAS*/
 
