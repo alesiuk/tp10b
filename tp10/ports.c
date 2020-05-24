@@ -15,7 +15,7 @@ static BOOLEAN is_a_valid_mask (char port, int mask); //Dado un puerto y una mas
 /*FUNCIONES EXTERNAS*/
 
 //Funcion para encender un bit. Recibe el puerto y el bit. Devuelve TRUE si hubo un error o FALSE si no lo hubo
-BOOLEAN bitSet (char port, int data){
+BOOLEAN  bitSet (char port, int data){
 	BOOLEAN error = FALSE;											//Variable para almacenar si hay error
 //VERIFICACION DE ENTRADA
 
@@ -53,7 +53,7 @@ BOOLEAN bitSet (char port, int data){
 }																	//POR FAVOR VER LA NOTA AL FINAL DE ESTE ARCHIVO
 
 //Funcion para apagar un bit. Recibe el puerto y el bit. Devuelve TRUE si hubo un error o FALSE si no lo hubo
-BOOLEAN bitClear (char port, int data){
+BOOLEAN  bitClear (char port, int data){
 	BOOLEAN error = FALSE;											//Variable para almacenar si hay error
 //VERIFICACION DE ENTRADA
 
@@ -94,7 +94,7 @@ BOOLEAN bitClear (char port, int data){
 }																	//POR FAVOR VER LA NOTA AL FINAL DE ESTE ARCHIVO
 
 //Funcion para conmutar un bit. Recibe el puerto y el bit. Devuelve TRUE si hubo un error o FALSE si no lo hubo
-BOOLEAN bitToggle (char port, int data){
+BOOLEAN  bitToggle (char port, int data){
 	BOOLEAN error = FALSE;											//Variable para almacenar si hay error
 //VERIFICACION DE ENTRADA
 
@@ -173,7 +173,7 @@ int bitGet (char port, int data){
 }
 
 //Funcion para encender todos los bits en estado alto de una mascara. Recibe el puerto y la mascara. Devuelve TRUE si hubo un error o FALSE si no lo hubo
-BOOLEAN maskOn (char port, int data){
+BOOLEAN  maskOn (char port, int data){
 	BOOLEAN error = FALSE;											//Variable para almacenar si hay error
 //VERIFICACION DE ENTRADA
 
@@ -229,7 +229,7 @@ BOOLEAN maskOn (char port, int data){
 }
 
 //Funcion para apagar todos los bits en estado alto de una mascara. Recibe el puerto y la mascara. Devuelve TRUE si hubo un error o FALSE si no lo hubo
-BOOLEAN maskOff (char port, int data){
+BOOLEAN  maskOff (char port, int data){
 	BOOLEAN error = FALSE;											//Variable para almacenar si hay error
 //VERIFICACION DE ENTRADA
 
@@ -287,7 +287,7 @@ BOOLEAN maskOff (char port, int data){
 }
 
 //Funcion para conmutar todos los bits en estado alto de una mascara. Recibe el puerto y la mascara. Devuelve TRUE si hubo un error o FALSE si no lo hubo
-BOOLEAN maskToggle (char port, int data){
+BOOLEAN  maskToggle (char port, int data){
 	BOOLEAN error = FALSE;											//Variable para almacenar si hay error
 //VERIFICACION DE ENTRADA
 

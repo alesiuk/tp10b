@@ -141,12 +141,12 @@ p.port[A/B]_bit.bX, x en [0,7]				//PortA/Portb bit
 
 //Todas las funciones reciben un char con el identificador de puerto, y un int con el numero de bit o la mascara segun corresponda
 //Todas las funciones (excepto bitGet) devuelven TRUE si hubo un error, o FALSE si no hubo errores
-BOOLEAN bitSet (char port, int data);		//Setea (pone en 1) un bit de un puerto determinado
-BOOLEAN bitClear (char port, int data);		//Limpia (pone en 0) un bit de un puerto determinado
-BOOLEAN bitToggle (char port, int data);	//Conmuta el valor de un bit de un puerto determinado
-int bitGet (char port, int data);			//Obtiene el valor de un bit. Devuelve dicho valor si no hubo errores, o -1 si hubo un error
+BOOLEAN  bitSet (char port, int data);		//Setea (pone en 1) un bit de un puerto determinado
+BOOLEAN  bitClear (char port, int data);		//Limpia (pone en 0) un bit de un puerto determinado
+BOOLEAN  bitToggle (char port, int data);	//Conmuta el valor de un bit de un puerto determinado
+int  bitGet (char port, int data);			//Obtiene el valor de un bit. Devuelve dicho valor si no hubo errores, o -1 si hubo un error
 BOOLEAN maskOn (char port, int data);		//Enciende todos los bits de un puerto segun los bits seteados de una mascara
-BOOLEAN maskOff (char port, int data);		//Apaga todos los bits de un puerto segun los bits seteados de una mascara
-BOOLEAN maskToggle (char port, int data);	//Conmuta todos los bits de un puerto segun los bits seteados de una mascara
+BOOLEAN  maskOff (char port, int data);		//Apaga todos los bits de un puerto segun los bits seteados de una mascara
+BOOLEAN  maskToggle (char port, int data);	//Conmuta todos los bits de un puerto segun los bits seteados de una mascara
 
 #endif
