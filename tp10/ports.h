@@ -19,7 +19,32 @@ Creado por el grupo 5 en mayo de 2020
 #define TRUE 1
 #define	FALSE 0
 
+/*MACROS DE VALORES DE PUERTOS*/
+
+#define PORT_AB_BITS 8
+#define PORT_D_BITS 16
+#define PORT_AB_MSb 7
+#define PORT_D_MSb 15
+#define PORT_AB_MAX_MSK 0xFF
+#define PORT_D_MAX_MSK 0xFFFF
+#define PORT_A_OFFSET 8
+
 /*ESTRUCTURAS*/
+
+#ifdef ENABLE_DDR
+//Estructura de Data Direction Register para los puertos A, B y D.
+//Uso: 1 = OUTPUT, 0 = INPUT
+typedef struct{
+	union{
+		uint16_t PORTD;		//DDR para puerto D. Lo uno con la estructura de DDR de puertos A y B
+		struct{
+			uint8_t PORTB;	//DDR para puertos A y B
+			uint8_t PORTA;
+		};
+	};
+}DDR_t;
+DDR_t DDR;					//DDR de los puertos
+#endif
 
 //Estructura bit a bit para puerto de 8 bits (generica)
 typedef struct{
@@ -119,7 +144,7 @@ p.port[A/B]_bit.bX, x en [0,7]				//PortA/Portb bit
 BOOLEAN bitSet (char port, int data);		//Setea (pone en 1) un bit de un puerto determinado
 BOOLEAN bitClear (char port, int data);		//Limpia (pone en 0) un bit de un puerto determinado
 BOOLEAN bitToggle (char port, int data);	//Conmuta el valor de un bit de un puerto determinado
-BOOLEAN bitGet (char port, int data);		//Obtiene el valor de un bit. Devuelve dicho valor si no hubo errores, o -1 si hubo un error
+int bitGet (char port, int data);			//Obtiene el valor de un bit. Devuelve dicho valor si no hubo errores, o -1 si hubo un error
 BOOLEAN maskOn (char port, int data);		//Enciende todos los bits de un puerto segun los bits seteados de una mascara
 BOOLEAN maskOff (char port, int data);		//Apaga todos los bits de un puerto segun los bits seteados de una mascara
 BOOLEAN maskToggle (char port, int data);	//Conmuta todos los bits de un puerto segun los bits seteados de una mascara

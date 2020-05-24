@@ -18,6 +18,21 @@ static BOOLEAN is_a_valid_mask (char port, int mask); //Dado un puerto y una mas
 BOOLEAN bitSet (char port, int data){
 	BOOLEAN error = FALSE;											//Variable para almacenar si hay error
 //VERIFICACION DE ENTRADA
+
+	#ifdef ENABLE_DDR												//Si los DDR estan habilitados
+	int ddr_offset = 0;												//Variable para offset del DDR de los puertos
+	uint16_t ddr_aux = DDR.PORTD;									//Variable auxiliar para el DDR de los puertos
+	uint16_t data_aux = 1;											//Variable auxiliar para procesar el bit pedido
+	if ((port == 'A') || (port == 'a')){							//Esta variable tiene que valer 8 para el puerto A y 0 para B y D
+		ddr_offset = PORT_A_OFFSET;
+	}
+	data_aux = data_aux << (data + ddr_offset);						//Hago un shift a la izquierda del bit para que coincida con el bit que quiero escribir
+	if (DDR.PORTD != (ddr_aux | data_aux)){							//Si al hacer OR bitwise entre data_aux y ddr_aux el resultado es distinto de DDR.PORTD,
+		printf ("Error: el bit %d del puerto %c no es un bit de salida.\n", data, port);	//entonces se intento escribir en una posicion declarada como
+		return TRUE;												//entrada (ya que en el DDR los ceros son entradas y los unos salidas y data_aux es un
+	}	//uint16_t que solo tiene un 1 en el bit que se quiere escribir, por lo que si hago OR bitwise entre el bit y los DDR deberia dar igual que los DDR si data es correcto)
+	#endif
+	
 	if (is_a_valid_port(port) == FALSE){							//Veo si el identificador del puerto es valido
 		error = TRUE;												//Si no lo es, hay un error
 	}
@@ -28,7 +43,7 @@ BOOLEAN bitSet (char port, int data){
 	else{		//Aqui es donde realmente ocurre el seteo pedido. Solo se llega a este caso si los anteriores, que son solo comprobacion, no generaron error
 		int offset = 0;												//Genero un offset para la mascara que va a valer 8 para portA y 0 para los otros
 		if ((port == 'A') || (port == 'a')){						//Asigno el offset
-			offset = 8;
+			offset = PORT_A_OFFSET;
 		}
 		uint16_t msk = 1;											//Creo una mascara con solo un 1
 		msk = msk << (data + offset);								//Shifteo la mascara al bit pedido
@@ -41,6 +56,21 @@ BOOLEAN bitSet (char port, int data){
 BOOLEAN bitClear (char port, int data){
 	BOOLEAN error = FALSE;											//Variable para almacenar si hay error
 //VERIFICACION DE ENTRADA
+
+	#ifdef ENABLE_DDR												//Si los DDR estan habilitados
+	int ddr_offset = 0;												//Variable para offset del DDR de los puertos
+	uint16_t ddr_aux = DDR.PORTD;									//Variable auxiliar para el DDR de los puertos
+	uint16_t data_aux = 1;											//Variable auxiliar para procesar el bit pedido
+	if ((port == 'A') || (port == 'a')){							//Esta variable tiene que valer 8 para el puerto A y 0 para B y D
+		ddr_offset = PORT_A_OFFSET;
+	}
+	data_aux = data_aux << (data + ddr_offset);						//Hago un shift a la izquierda del bit para que coincida con el bit que quiero escribir
+	if (DDR.PORTD != (ddr_aux | data_aux)){							//Si al hacer OR bitwise entre data_aux y ddr_aux el resultado es distinto de DDR.PORTD,
+		printf ("Error: el bit %d del puerto %c no es un bit de salida.\n", data, port);	//entonces se intento escribir en una posicion declarada como
+		return TRUE;												//entrada (ya que en el DDR los ceros son entradas y los unos salidas y data_aux es un
+	}	//uint16_t que solo tiene un 1 en el bit que se quiere escribir, por lo que si hago OR bitwise entre el bit y los DDR deberia dar igual que los DDR si data es correcto)
+	#endif
+	
 	if (is_a_valid_port(port) == FALSE){							//Veo si el identificador del puerto es valido
 		error = TRUE;												//Si no lo es, hay un error
 	}
@@ -51,12 +81,12 @@ BOOLEAN bitClear (char port, int data){
 	else{		//Aqui es donde realmente ocurre el borrado pedido. Solo se llega a este caso si los anteriores, que son solo comprobacion, no generaron error
 		int offset = 0;												//Genero un offset para la mascara que va a valer 8 para portA y 0 para los otros
 		if ((port == 'A') || (port == 'a')){						//Asigno el offset
-			offset = 8;
+			offset = PORT_A_OFFSET;
 		}
 		uint16_t msk = 0xFFFE;										//Creo una mascara con todos 1s y solo un cero al final
 		for (unsigned int i = 0; i < (data + offset); i++){			//Shiftear un cero es mas dificil que shiftear unos porque se ingresan ceros por la derecha
 			msk = msk << 1;											//Entonces con un ciclo for shifteo de a una posicion hasta llegar a la posicion pedida
-			p.b0 = 1;												//Y uso las operaciones de struct para ir rellenando con unos cada vez que se shiftea
+			msk += 1; //Y como se ingresan ceros a la derecha los cambio por unos sumando 1 por cada shift
 		}
 		p.portD.W = p.portD.W & msk;								//Luego realizo un AND bitwise solo poniendo el cero en el bit que quiero apagar
 	}
@@ -67,6 +97,21 @@ BOOLEAN bitClear (char port, int data){
 BOOLEAN bitToggle (char port, int data){
 	BOOLEAN error = FALSE;											//Variable para almacenar si hay error
 //VERIFICACION DE ENTRADA
+
+	#ifdef ENABLE_DDR												//Si los DDR estan habilitados
+	int ddr_offset = 0;												//Variable para offset del DDR de los puertos
+	uint16_t ddr_aux = DDR.PORTD;									//Variable auxiliar para el DDR de los puertos
+	uint16_t data_aux = 1;											//Variable auxiliar para procesar el bit pedido
+	if ((port == 'A') || (port == 'a')){							//Esta variable tiene que valer 8 para el puerto A y 0 para B y D
+		ddr_offset = PORT_A_OFFSET;
+	}
+	data_aux = data_aux << (data + ddr_offset);						//Hago un shift a la izquierda del bit para que coincida con el bit que quiero escribir
+	if (DDR.PORTD != (ddr_aux | data_aux)){							//Si al hacer OR bitwise entre data_aux y ddr_aux el resultado es distinto de DDR.PORTD,
+		printf ("Error: el bit %d del puerto %c no es un bit de salida.\n", data, port);	//entonces se intento escribir en una posicion declarada como
+		return TRUE;												//entrada (ya que en el DDR los ceros son entradas y los unos salidas y data_aux es un
+	}	//uint16_t que solo tiene un 1 en el bit que se quiere escribir, por lo que si hago OR bitwise entre el bit y los DDR deberia dar igual que los DDR si data es correcto)
+	#endif
+	
 	if (is_a_valid_port(port) == FALSE){							//Veo si el identificador del puerto es valido
 		error = TRUE;												//Si no lo es, hay un error
 	}
@@ -77,7 +122,7 @@ BOOLEAN bitToggle (char port, int data){
 	else{		//Aqui es donde realmente ocurre la conmutacion pedida. Solo se llega a este caso si los anteriores, que son solo comprobacion, no generaron error
 		int offset = 0;												//Genero un offset para la mascara que va a valer 8 para portA y 0 para los otros
 		if ((port == 'A') || (port == 'a')){						//Asigno el offset
-			offset = 8;
+			offset = PORT_A_OFFSET;
 		}
 		uint16_t msk = 1;											//Creo una mascara con solo un 1
 		msk = msk << (data + offset);								//Shifteo la mascara al bit pedido
@@ -86,15 +131,76 @@ BOOLEAN bitToggle (char port, int data){
 	return error;													//Devuelvo si hubo un error
 }																	//POR FAVOR VER LA NOTA AL FINAL DE ESTE ARCHIVO
 
-/*
+//Funcion para leer un bit. Recibe el puerto y el bit. Devuelve el valor del bit o -1 si hubo un error
 int bitGet (char port, int data){
+	int return_value = 0;											//Variable temporal para almacenar el valor que voy a devolver
+//VERIFICACION DE ENTRADA
+
+	#ifdef ENABLE_DDR												//Si los DDR estan habilitados
+	int ddr_offset = 0;												//Variable para offset del DDR de los puertos
+	uint16_t ddr_aux = DDR.PORTD;									//Variable auxiliar para el DDR de los puertos
+	uint16_t data_aux = 1;											//Variable auxiliar para procesar el bit pedido
+	if ((port == 'A') || (port == 'a')){							//Esta variable tiene que valer 8 para el puerto A y 0 para B y D
+		ddr_offset = PORT_A_OFFSET;
+	}
+	data_aux = data_aux << (data + ddr_offset);						//Hago un shift a la izquierda del bit para que coincida con el bit que quiero leer
+	if (DDR.PORTD == (ddr_aux | data_aux)){							//Si al hacer OR bitwise entre data_aux y ddr_aux el resultado es igual a DDR.PORTD,
+		printf ("Error: el bit %d del puerto %c no es un bit de entrada.\n", data, port);	//entonces se intento leer en una posicion declarada como
+		return -1;													//salida (ya que en el DDR los ceros son entradas y los unos salidas y data_aux es un
+	}	//uint16_t que solo tiene un 1 en el bit que se quiere leer, por lo que si hago OR bitwise entre el bit y los DDR deberia dar distinto que los DDR si data es correcto)
+	#endif
+	
+	if (is_a_valid_port(port) == FALSE){							//Veo si el identificador del puerto es valido
+		return_value = -1;											//Si no lo es, hay un error
+	}
+	else if (is_a_valid_bit(port,data) == FALSE){					//Luego veo si la mascara es correcta, osea, si tiene sentido para la cantidad de bits del puerto
+		return_value = -1;											//Indico que hubo un error
+	}																//Si el puerto no es valido no tiene sentido ver si la mascara lo es. Por eso el else if
+//OPERACION BITGET
+	else{		//Aqui es donde se obtiene el bit pedido. Solo se llega a este caso si los anteriores, que son solo comprobacion, no generaron error
+		int offset = 0;												//Genero un offset para la mascara que va a valer 8 para portA y 0 para los otros
+		if ((port == 'A') || (port == 'a')){						//Asigno el offset
+			offset = PORT_A_OFFSET;
+		}
+		uint16_t aux = p.portD.W;									//Copio el valor del word en una variable auxiliar
+		aux = aux >> (data + offset);								//Shifteo la variable auxiliar a la derecha para que el bit pedido quede a en p.b0 (D bit 0)
+		if ((aux % 2) == 1){										//Si aux es divisible enteramente por dos, el bit 0 estara en cero y no se ingresa en este if
+			return_value = 1;										//Caso contrario, se hace que return_value sea 1. Este es el valor que voy a devolver
+		}	
+	}
+	
+	return return_value;											//Devuelvo el valor del bit
 }
-*/
 
 //Funcion para encender todos los bits en estado alto de una mascara. Recibe el puerto y la mascara. Devuelve TRUE si hubo un error o FALSE si no lo hubo
 BOOLEAN maskOn (char port, int data){
 	BOOLEAN error = FALSE;											//Variable para almacenar si hay error
 //VERIFICACION DE ENTRADA
+
+	#ifdef ENABLE_DDR												//Si los DDR estan habilitados								
+	uint16_t ddr_aux16 = DDR.PORTD;									//Variables auxiliares para el DDR de los puertos
+	uint8_t ddr_aux8;
+	switch(port){													//Para el puerto que se haya ingresado
+		case 'A': case 'a':
+		ddr_aux8 = DDR.PORTA;										//Copio el DDR del puerto en una variable	
+		if (DDR.PORTD != (ddr_aux8 | data)){							//Y si el puerto no coincide con el OR bitwise entre si mismo y los datos, hay un error
+			printf ("Error: la mascara intenta escribir al menos un bit de entrada.\n");
+			return TRUE;											//Devuelvo que hubo un error
+		}
+		case 'B': case 'b':
+		ddr_aux8 = DDR.PORTB;	
+		if (DDR.PORTD != (ddr_aux8 | data)){
+			printf ("Error: la mascara intenta escribir al menos un bit de entrada.\n");
+			return TRUE;
+		}
+		case 'D': case 'd':
+		if (DDR.PORTD != (ddr_aux16 | data)){
+			printf ("Error: la mascara intenta escribir al menos un bit de entrada.\n");
+			return TRUE;
+		}
+	}		
+	#endif
+	
 	if (is_a_valid_port(port) == FALSE){							//Veo si el identificador del puerto es valido
 		error = TRUE;												//Si no lo es, hay un error
 	}
@@ -126,6 +232,31 @@ BOOLEAN maskOn (char port, int data){
 BOOLEAN maskOff (char port, int data){
 	BOOLEAN error = FALSE;											//Variable para almacenar si hay error
 //VERIFICACION DE ENTRADA
+
+	#ifdef ENABLE_DDR												//Si los DDR estan habilitados								
+	uint16_t ddr_aux16 = DDR.PORTD;									//Variables auxiliares para el DDR de los puertos
+	uint8_t ddr_aux8;
+	switch(port){													//Para el puerto que se haya ingresado
+		case 'A': case 'a':
+		ddr_aux8 = DDR.PORTA;										//Copio el DDR del puerto en una variable	
+		if (DDR.PORTD != (ddr_aux8 | data)){							//Y si el puerto no coincide con el OR bitwise entre si mismo y los datos, hay un error
+			printf ("Error: la mascara intenta escribir al menos un bit de entrada.\n");
+			return TRUE;											//Devuelvo que hubo un error
+		}
+		case 'B': case 'b':
+		ddr_aux8 = DDR.PORTB;	
+		if (DDR.PORTD != (ddr_aux8 | data)){
+			printf ("Error: la mascara intenta escribir al menos un bit de entrada.\n");
+			return TRUE;
+		}
+		case 'D': case 'd':
+		if (DDR.PORTD != (ddr_aux16 | data)){
+			printf ("Error: la mascara intenta escribir al menos un bit de entrada.\n");
+			return TRUE;
+		}
+	}		
+	#endif
+	
 	if (is_a_valid_port(port) == FALSE){							//Veo si el identificador del puerto es valido
 		error = TRUE;												//Si no lo es, hay un error
 	}
@@ -136,15 +267,17 @@ BOOLEAN maskOff (char port, int data){
 	else{		//Aqui es donde realmente ocurre el borrado pedido. Solo se llega a este caso si los anteriores, que son solo comprobacion, no generaron error
 	uint8_t msk8 = data;	//Transformo la mascara recibida a uint8_t para poder trabajar con los puertos A y B
 	uint16_t msk16 = data;	//Transformo la mascara recibida a uint16_t para poder trabajar con el puerto D
+	msk8 = ~msk8;			//Complemento a 1 la mascara para en lugar de tener todos ceros y los unos en los bits que quiero apagar
+	msk16 = ~msk16;			//tenga todos unos y ceros en los bits que quiero apagar. Esto me permite hacer AND bitwise
 		switch (port){
 			case 'A': case 'a':
-				p.portA_byte.B = p.portA_byte.B | msk8;				//Aplico OR bitwise entre todo el byte del puerto y la mascara
+				p.portA_byte.B = p.portA_byte.B & msk8;				//Aplico AND bitwise entre todo el byte del puerto y la mascara
 				break;
 			case 'B': case 'b':
-				p.portB_byte.B = p.portB_byte.B | msk8;				//Aplico OR bitwise entre todo el byte del puerto y la mascara
+				p.portB_byte.B = p.portB_byte.B & msk8;				//Aplico AND bitwise entre todo el byte del puerto y la mascara
 				break;
 			case 'D': case 'd':
-				p.portD.W = p.portD.W | msk16;						//Aplico OR bitwise entre todo el word del puerto y la mascara
+				p.portD.W = p.portD.W & msk16;						//Aplico AND bitwise entre todo el word del puerto y la mascara
 				break;
 			default:
 				break;		
@@ -157,6 +290,31 @@ BOOLEAN maskOff (char port, int data){
 BOOLEAN maskToggle (char port, int data){
 	BOOLEAN error = FALSE;											//Variable para almacenar si hay error
 //VERIFICACION DE ENTRADA
+
+	#ifdef ENABLE_DDR												//Si los DDR estan habilitados								
+	uint16_t ddr_aux16 = DDR.PORTD;									//Variables auxiliares para el DDR de los puertos
+	uint8_t ddr_aux8;
+	switch(port){													//Para el puerto que se haya ingresado
+		case 'A': case 'a':
+		ddr_aux8 = DDR.PORTA;										//Copio el DDR del puerto en una variable	
+		if (DDR.PORTD != (ddr_aux8 | data)){							//Y si el puerto no coincide con el OR bitwise entre si mismo y los datos, hay un error
+			printf ("Error: la mascara intenta escribir al menos un bit de entrada.\n");
+			return TRUE;											//Devuelvo que hubo un error
+		}
+		case 'B': case 'b':
+		ddr_aux8 = DDR.PORTB;	
+		if (DDR.PORTD != (ddr_aux8 | data)){
+			printf ("Error: la mascara intenta escribir al menos un bit de entrada.\n");
+			return TRUE;
+		}
+		case 'D': case 'd':
+		if (DDR.PORTD != (ddr_aux16 | data)){
+			printf ("Error: la mascara intenta escribir al menos un bit de entrada.\n");
+			return TRUE;
+		}
+	}		
+	#endif
+	
 	if (is_a_valid_port(port) == FALSE){							//Veo si el identificador del puerto es valido
 		error = TRUE;												//Si no lo es, hay un error
 	}
@@ -169,18 +327,18 @@ BOOLEAN maskToggle (char port, int data){
 	uint16_t msk16 = data;	//Transformo la mascara recibida a uint16_t para poder trabajar con el puerto D
 		switch (port){
 			case 'A': case 'a':
-				p.portA_byte.B = p.portA_byte.B | msk8;				//Aplico OR bitwise entre todo el byte del puerto y la mascara
+				p.portA_byte.B = p.portA_byte.B ^ msk8;				//Aplico XOR bitwise entre todo el byte del puerto y la mascara
 				break;
 			case 'B': case 'b':
-				p.portB_byte.B = p.portB_byte.B | msk8;				//Aplico OR bitwise entre todo el byte del puerto y la mascara
+				p.portB_byte.B = p.portB_byte.B ^ msk8;				//Aplico XOR bitwise entre todo el byte del puerto y la mascara
 				break;
 			case 'D': case 'd':
-				p.portD.W = p.portD.W | msk16;						//Aplico OR bitwise entre todo el word del puerto y la mascara
+				p.portD.W = p.portD.W ^ msk16;						//Aplico XOR bitwise entre todo el word del puerto y la mascara
 				break;
 			default:
 				break;		
 		}		
-	}
+	}	//Para entender esta operacion es util recalcar que la compuerta XOR puede ser vista como un negador controlado de una entrada cuando la otra se pone en 1
 	return error;													//Devuelvo si hubo un error
 }
 
@@ -207,10 +365,10 @@ static BOOLEAN is_a_valid_bit (char port, int bit){
 	switch(port){
 		case 'A': case 'a':
 		case 'B': case 'b':
-			maxbits = 7;		//Los puertos A y B son de 8 bits (numerados de 0 a 7)
+			maxbits = PORT_AB_MSb;	//Los puertos A y B son de 8 bits (numerados de 0 a 7)
 			break;
 		case 'D': case 'd':
-			maxbits = 15;		//El puerto D es de 16 bits (numerados de 0 a 15)
+			maxbits = PORT_D_MSb;	//El puerto D es de 16 bits (numerados de 0 a 15)
 			break;
 		default:
 			break;				//Caso por defecto (nunca se deberia utilizar)
@@ -235,12 +393,12 @@ static BOOLEAN is_a_valid_mask (char port, int mask){
 	switch(port){
 		case 'A': case 'a':
 		case 'B': case 'b':
-			maxmask = 0xFF;		//Los puertos A y B son de 8 bits y la mascara mas grande que ocupa 8 bits es 0xFF
-			maxbits = 8;		//Numero de bits que tienen los puertos A y B
+			maxmask = PORT_AB_MAX_MSK;		//Los puertos A y B son de 8 bits y la mascara mas grande que ocupa 8 bits es 0xFF
+			maxbits = PORT_AB_BITS;		//Numero de bits que tienen los puertos A y B
 			break;
 		case 'D': case 'd':
-			maxmask = 0xFFFF;	//El puerto D es de 16 bits y la mascara mas grande que ocupa 16 bits es 0xFFFF
-			maxbits = 16;		//Numero de bits que tiene el puerto D
+			maxmask = PORT_D_MAX_MSK;	//El puerto D es de 16 bits y la mascara mas grande que ocupa 16 bits es 0xFFFF
+			maxbits = PORT_D_BITS;		//Numero de bits que tiene el puerto D
 			break;
 		default:
 			break;				//Caso por defecto (nunca se deberia utilizar)
