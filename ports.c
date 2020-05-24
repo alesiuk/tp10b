@@ -7,94 +7,184 @@ Creado por el grupo 5 en mayo de 2020
 
 #include "ports.h"
 
-/*DEFINICIONES DE CONSTANTES*/
-#define MAX_OPERATIONS 20	//Maxima cantidad de operaciones diferentes que se pueden realizar. Incrementar para agregar mas
-
-/*ARREGLOS GLOBALES EN FILE LEVEL*/
-static int operation_code_array[MAX_OPERATIONS];						//En este arreglo se guardan los codigos de operacion.
-static BOOLEAN (*operations[MAX_OPERATIONS])(char, int);				//En este arreglo se guardan los punteros a las funciones de operacion
-//Estos arreglos estan ordenados de forma tal que son del mismo tamaño y que la posicion de un opcode y de un puntero a una funcion de operacion
-//relativo al comienzo del arreglo correspondiente es la misma, y en esto basa su funcionamiento la funcion get_operation
-
-/*PROTOTIPOS DE FUNCIONES INTERNAS GENERALES*/
-static BOOLEAN add_operation (int operation_code, int (*operation_function)(char, int)); //Agrega las operaciones en forma dinamica
-static int get_operation (int opcode);	//Obtiene la posicion de la operacion buscada respecto al inicio del arreglo de punteros
+/*PROTOTIPOS DE FUNCIONES INTERNAS*/
 static BOOLEAN is_a_valid_port (char port); //Esta funcion comprueba que el identificador de puerto provisto sea valido
 static BOOLEAN is_a_valid_bit (char port, int bit);	//Dado un puerto valido, esta funcion comprueba si el numero de bit pedido es valido
+static BOOLEAN is_a_valid_mask (char port, int mask) //Dado un puerto y una mascara, esta funcion comprueba si la mascara es adecuada al puerto indicado
 
-/*PROTOTIPOS DE FUNCIONES INTERNAS DE MANEJO DE PUERTOS*/
-static BOOLEAN bitSet (char port, int data);		//Setea (pone en 1) un bit de un puerto determinado
-static BOOLEAN bitClear (char port, int data);		//Limpia (pone en 0) un bit de un puerto determinado
-static BOOLEAN bitToggle (char port, int data);		//Conmuta el valor de un bit de un puerto determinado
-//static BOOLEAN bitGet (char port, int data);		//Obtiene y devuelve el valor de un bit de un puerto determinado
-static BOOLEAN maskOn (char port, int data);		//Enciende todos los bits de un puerto segun los bits seteados de una mascara
-//static BOOLEAN maskOff (char port, int data);		//Apaga todos los bits de un puerto segun los bits seteados de una mascara
-//static BOOLEAN maskToggle (char port, int data);	//Conmuta todos los bits de un puerto segun los bits seteados de una mascara
+/*FUNCIONES EXTERNAS*/
 
-/*FUNCION EXTERNA*/
-
-//Esta funcion realiza operaciones sobre los puetos de un microcontrolador. Devuelve TRUE si hubo un error, o FALSE si no lo hubo
-//Recibe la operacion que hay que realizar en la variable operation mediante un opcode definido y los datos necesarios para la operacion
-BOOLEAN port_operations(int operation, char port, int data){
-//Agrego dinamicamente las operaciones
-	static BOOLEAN ops_added = FALSE;
-	if (ops_added == FALSE){	//Defino dinamicamente las operaciones al iniciar, pero solo la primera vez que ejecuto esta funcion
-		ops_added = TRUE;				//Defino que ya se añadieron las operaciones para no hacerlo mas de una vez 
-		int error = 0;					//Variable para errores
-		error += add_operation(0, bitSet);	//Cargo cada operacion y veo si hubo un error al cargarlas, sumando a la variable error
-		error += add_operation(1, bitClear);
-		error += add_operation(2, bitToggle);
-		//error += add_operation(3, bitGet);
-		error += add_operation(4, maskOn);
-		//error += add_operation(5, maskOff);
-		//error += add_operation(6, maskToggle);
-		if (error != 0){				//Si no hubo errores, esta variable tiene que seguir valiendo cero
-			return TRUE;				//Asique si la variable no es cero, hubo un error y se informa
+//Funcion para encender un bit. Recibe el puerto y el bit. Devuelve TRUE si hubo un error o FALSE si no lo hubo
+BOOLEAN bitSet (char port, int data){
+	BOOLEAN error = FALSE;											//Variable para almacenar si hay error
+//VERIFICACION DE ENTRADA
+	if (is_a_valid_port(port) == FALSE){							//Veo si el identificador del puerto es valido
+		error = TRUE;												//Si no lo es, hay un error
+	}
+	else if (is_a_valid_bit(port,data) == FALSE){					//Luego veo si el numero de bit que se provee es un bit valido
+		error = TRUE;												//Indico que hubo un error
+	}																//Si el puerto no es valido no tiene sentido ver si el bit lo es. Por eso el else if
+//OPERACION BITSET
+	else{		//Aqui es donde realmente ocurre el seteo pedido. Solo se llega a este caso si los anteriores, que son solo comprobacion, no generaron error
+		int offset = 0;												//Genero un offset para la mascara que va a valer 8 para portA y 0 para los otros
+		if ((port == 'A') || (port == 'a')){						//Asigno el offset
+			offset = 8;
 		}
+		uint16_t msk = 1;											//Creo una mascara con solo un 1
+		msk = msk << (data + offset);								//Shifteo la mascara al bit pedido
+		p.portD.W = p.portD.W | msk;								//Y realizo un OR bitwise solo poniendo un uno en el bit que quiero encender
 	}
-//Busqueda y llamado a funcion que realiza las operaciones
-	BOOLEAN error1;							//Esta variable detecta si hubo un error en alguna funcion de operacion
-	int op_position_in_array = get_operation(operation);	//Obtengo la posicion de la operacion
-	if (op_position_in_array == -1){						//Si get_operation devolvio -1 no se encontro el opcode. Error
-		error1 = TRUE;
+	return error;													//Devuelvo si hubo un error
+}																	//POR FAVOR VER LA NOTA AL FINAL DE ESTE ARCHIVO
+
+//Funcion para apagar un bit. Recibe el puerto y el bit. Devuelve TRUE si hubo un error o FALSE si no lo hubo
+BOOLEAN bitClear (char port, int data){
+	BOOLEAN error = FALSE;											//Variable para almacenar si hay error
+//VERIFICACION DE ENTRADA
+	if (is_a_valid_port(port) == FALSE){							//Veo si el identificador del puerto es valido
+		error = TRUE;												//Si no lo es, hay un error
 	}
-	else{
-		error1 = operations[op_position_in_array](port, data);	//Si el opcode es valido, realizo la operacion pedida
+	else if (is_a_valid_bit(port,data) == FALSE){					//Luego veo si el numero de bit que se provee es un bit valido
+		error = TRUE;												//Indico que hubo un error
+	}																//Si el puerto no es valido no tiene sentido ver si el bit lo es. Por eso el else if
+//OPERACION BITCLEAR
+	else{		//Aqui es donde realmente ocurre el borrado pedido. Solo se llega a este caso si los anteriores, que son solo comprobacion, no generaron error
+		int offset = 0;												//Genero un offset para la mascara que va a valer 8 para portA y 0 para los otros
+		if ((port == 'A') || (port == 'a')){						//Asigno el offset
+			offset = 8;
+		}
+		uint16_t msk = 0xFFFE;										//Creo una mascara con todos 1s y solo un cero al final
+		for (unsigned int i = 0; i < (data + offset); i++){			//Shiftear un cero es mas dificil que shiftear unos porque se ingresan ceros por la derecha
+			msk = msk << 1;											//Entonces con un ciclo for shifteo de a una posicion hasta llegar a la posicion pedida
+			p.b0 = 1;												//Y uso las operaciones de struct para ir rellenando con unos cada vez que se shiftea
+		}
+		p.portD.W = p.portD.W & msk;								//Luego realizo un AND bitwise solo poniendo el cero en el bit que quiero apagar
 	}
-	return error1;								//Vuelvo al programa principal, devuelvo que no hubo errores
+	return error;													//Devuelvo si hubo un error
+}																	//POR FAVOR VER LA NOTA AL FINAL DE ESTE ARCHIVO
+
+//Funcion para conmutar un bit. Recibe el puerto y el bit. Devuelve TRUE si hubo un error o FALSE si no lo hubo
+BOOLEAN bitToggle (char port, int data){
+	BOOLEAN error = FALSE;											//Variable para almacenar si hay error
+//VERIFICACION DE ENTRADA
+	if (is_a_valid_port(port) == FALSE){							//Veo si el identificador del puerto es valido
+		error = TRUE;												//Si no lo es, hay un error
+	}
+	else if (is_a_valid_bit(port,data) == FALSE){					//Luego veo si el numero de bit que se provee es un bit valido
+		error = TRUE;												//Indico que hubo un error
+	}																//Si el puerto no es valido no tiene sentido ver si el bit lo es. Por eso el else if
+//OPERACION BITTOGGLE
+	else{		//Aqui es donde realmente ocurre la conmutacion pedida. Solo se llega a este caso si los anteriores, que son solo comprobacion, no generaron error
+		int offset = 0;												//Genero un offset para la mascara que va a valer 8 para portA y 0 para los otros
+		if ((port == 'A') || (port == 'a')){						//Asigno el offset
+			offset = 8;
+		}
+		uint16_t msk = 1;											//Creo una mascara con solo un 1
+		msk = msk << (data + offset);								//Shifteo la mascara al bit pedido
+		p.portD.W = p.portD.W ^ msk;								//Y realizo un XOR bitwise conmutando solo el bit pedido
+	}	//Para entender esta operacion es util recalcar que la compuerta XOR puede ser vista como un negador controlado de una entrada cuando la otra se pone en 1
+	return error;													//Devuelvo si hubo un error
+}																	//POR FAVOR VER LA NOTA AL FINAL DE ESTE ARCHIVO
+
+/*
+int bitGet (char port, int data){
+}
+*/
+
+//Funcion para encender todos los bits en estado alto de una mascara. Recibe el puerto y la mascara. Devuelve TRUE si hubo un error o FALSE si no lo hubo
+BOOLEAN maskOn (char port, int data){
+	BOOLEAN error = FALSE;											//Variable para almacenar si hay error
+//VERIFICACION DE ENTRADA
+	if (is_a_valid_port(port) == FALSE){							//Veo si el identificador del puerto es valido
+		error = TRUE;												//Si no lo es, hay un error
+	}
+	else if (is_a_valid_mask(port,data) == FALSE){					//Luego veo si la mascara es correcta, osea, si tiene sentido para la cantidad de bits del puerto
+		error = TRUE;												//Indico que hubo un error
+	}																//Si el puerto no es valido no tiene sentido ver si la mascara lo es. Por eso el else if
+//OPERACION MASKON
+	else{		//Aqui es donde realmente ocurre el seteo pedido. Solo se llega a este caso si los anteriores, que son solo comprobacion, no generaron error
+	uint8_t msk8 = data;	//Transformo la mascara recibida a uint8_t para poder trabajar con los puertos A y B
+	uint16_t msk16 = data;	//Transformo la mascara recibida a uint16_t para poder trabajar con el puerto D
+		switch (port){
+			case 'A': case 'a':
+				p.portA_byte.B = p.portA_byte.B | msk8;				//Aplico OR bitwise entre todo el byte del puerto y la mascara
+				break;
+			case 'B': case 'b':
+				p.portB_byte.B = p.portB_byte.B | msk8;				//Aplico OR bitwise entre todo el byte del puerto y la mascara
+				break;
+			case 'D': case 'd':
+				p.portD.W = p.portD.W | msk16;						//Aplico OR bitwise entre todo el word del puerto y la mascara
+				break;
+			default:
+				break;		
+		}		
+	}
+	return error;													//Devuelvo si hubo un error
+}
+
+//Funcion para apagar todos los bits en estado alto de una mascara. Recibe el puerto y la mascara. Devuelve TRUE si hubo un error o FALSE si no lo hubo
+BOOLEAN maskOff (char port, int data){
+	BOOLEAN error = FALSE;											//Variable para almacenar si hay error
+//VERIFICACION DE ENTRADA
+	if (is_a_valid_port(port) == FALSE){							//Veo si el identificador del puerto es valido
+		error = TRUE;												//Si no lo es, hay un error
+	}
+	else if (is_a_valid_mask(port,data) == FALSE){					//Luego veo si la mascara es correcta, osea, si tiene sentido para la cantidad de bits del puerto
+		error = TRUE;												//Indico que hubo un error
+	}																//Si el puerto no es valido no tiene sentido ver si la mascara lo es. Por eso el else if
+//OPERACION MASKOFF
+	else{		//Aqui es donde realmente ocurre el borrado pedido. Solo se llega a este caso si los anteriores, que son solo comprobacion, no generaron error
+	uint8_t msk8 = data;	//Transformo la mascara recibida a uint8_t para poder trabajar con los puertos A y B
+	uint16_t msk16 = data;	//Transformo la mascara recibida a uint16_t para poder trabajar con el puerto D
+		switch (port){
+			case 'A': case 'a':
+				p.portA_byte.B = p.portA_byte.B | msk8;				//Aplico OR bitwise entre todo el byte del puerto y la mascara
+				break;
+			case 'B': case 'b':
+				p.portB_byte.B = p.portB_byte.B | msk8;				//Aplico OR bitwise entre todo el byte del puerto y la mascara
+				break;
+			case 'D': case 'd':
+				p.portD.W = p.portD.W | msk16;						//Aplico OR bitwise entre todo el word del puerto y la mascara
+				break;
+			default:
+				break;		
+		}		
+	}
+	return error;													//Devuelvo si hubo un error
+}
+
+//Funcion para conmutar todos los bits en estado alto de una mascara. Recibe el puerto y la mascara. Devuelve TRUE si hubo un error o FALSE si no lo hubo
+BOOLEAN maskToggle (char port, int data){
+	BOOLEAN error = FALSE;											//Variable para almacenar si hay error
+//VERIFICACION DE ENTRADA
+	if (is_a_valid_port(port) == FALSE){							//Veo si el identificador del puerto es valido
+		error = TRUE;												//Si no lo es, hay un error
+	}
+	else if (is_a_valid_mask(port,data) == FALSE){					//Luego veo si la mascara es correcta, osea, si tiene sentido para la cantidad de bits del puerto
+		error = TRUE;												//Indico que hubo un error
+	}																//Si el puerto no es valido no tiene sentido ver si la mascara lo es. Por eso el else if
+//OPERACION MASKTOGGLE
+	else{		//Aqui es donde realmente ocurre la conmutacion pedida. Solo se llega a este caso si los anteriores, que son solo comprobacion, no generaron error
+	uint8_t msk8 = data;	//Transformo la mascara recibida a uint8_t para poder trabajar con los puertos A y B
+	uint16_t msk16 = data;	//Transformo la mascara recibida a uint16_t para poder trabajar con el puerto D
+		switch (port){
+			case 'A': case 'a':
+				p.portA_byte.B = p.portA_byte.B | msk8;				//Aplico OR bitwise entre todo el byte del puerto y la mascara
+				break;
+			case 'B': case 'b':
+				p.portB_byte.B = p.portB_byte.B | msk8;				//Aplico OR bitwise entre todo el byte del puerto y la mascara
+				break;
+			case 'D': case 'd':
+				p.portD.W = p.portD.W | msk16;						//Aplico OR bitwise entre todo el word del puerto y la mascara
+				break;
+			default:
+				break;		
+		}		
+	}
+	return error;													//Devuelvo si hubo un error
 }
 
 /*FUNCIONES INTERNAS*/
-
-//Esta funcion carga las operaciones de manera dinamica. Recibe un puntero a la funcion de operacion y el codigo de operacion
-//Devuelve FALSE si no hubo errores o TRUE si los hubo
-static BOOLEAN add_operation (int operation_code, int (*operation_function)(char, int)){
-	static int last_added = -1;					//Esta variable se usa para ir agregando funciones al arreglo
-	if (last_added > (MAX_OPERATIONS - 1)){				//Compruebo que no se haya excedido el maximo de operaciones soportadas
-		printf ("Error: se añadieron demasiadas operaciones. El maximo es %d.\n", MAX_OPERATIONS);
-		printf ("Incremente \"MAX_OPERATIONS\" en \"ports.c\" para soportar mas operaciones.\n");
-		return TRUE;						//Si se excedio devuelvo un error
-	}								//Caso contrario:
-	operation_code_array[++last_added] = operation_code;		//Agrego el codigo de operacion al arreglo
-	operations[last_added] = operation_function;			//Agrego el puntero a la operacion en el arreglo correspondiente
-	return FALSE;							//Devuelvo que no hubo errores
-}
-
-//Esta funcion recibe el opcode de la operacion a realizar y devuelve la posicion de la operacion buscada en el arreglo de operaciones
-//Tipicamente la posicion de la operacion en el arreglo coincide con el opcode, pero esto puede no ser verdad siempre, ya que si se
-//agregaran operaciones, podrian quedar desordenadas. Si no se encuentra el opcode devuelve -1
-static int get_operation (int opcode){
-	unsigned int i = 0;								//Esta variable recorre el arreglo de opcodes
-	while (operation_code_array[i] != opcode){		//Mientras no se encuentre el opcode pedido, incrementar la variable
-		i++;
-		if (i == MAX_OPERATIONS){					//Si se recorrio todo el arreglo sin una coincidencia, ese opcode no existe
-			i = -1;									//Entonces devuelvo un error
-			printf ("Error: El opcode %d no corresponde a ninguna operacion conocida.\n", opcode);
-			break;									//Y salgo del while
-		}
-	}
-	return i;	//Al encontrar el opcode, la devolver la variable. Esta variable le indicara al
-}				//programa en que posicion del arreglo de punteros se encuentra el puntero a la funcion que necesita
 
 //Esta funcion verifica si se recibio una letra de puerto correcta recibiendola en un char y devuelve TRUE o FALSE segun lo sea o no
 static BOOLEAN is_a_valid_port (char port){
@@ -167,132 +257,13 @@ static BOOLEAN is_a_valid_mask (char port, int mask){
 	return valid;				//Devuelvo la validez
 }
 
-/*Funciones pedidas: bitSet, bitClr, bitToggle, bitGet, maskOn, maskOff y maskToggle*/
-
-//Funcion para encender un bit. Recibe el puerto y el bit. Devuelve TRUE si hubo un error o FALSE si no lo hubo
-static BOOLEAN bitSet (char port, int data){
-	BOOLEAN error = FALSE;											//Variable para almacenar si hay error
-//VERIFICACION DE ENTRADA
-	if (is_a_valid_port(port) == FALSE){							//Veo si el identificador del puerto es valido
-		error = TRUE;												//Si no lo es, hay un error
-	}
-	else if (is_a_valid_bit(port,data) == FALSE){					//Luego veo si el numero de bit que se provee es un bit valido
-		error = TRUE;												//Indico que hubo un error
-	}																//Si el puerto no es valido no tiene sentido ver si el bit lo es. Por eso el else if
-//OPERACION BITSET
-	else{		//Aqui es donde realmente ocurre el seteo pedido. Solo se llega a este caso si los anteriores, que son solo comprobacion, no generaron error
-		int offset = 0;												//Genero un offset para la mascara que va a valer 8 para portA y 0 para los otros
-		if ((port == 'A') || (port == 'a')){						//Asigno el offset
-			offset = 8;
-		}
-		uint16_t msk = 1;											//Creo una mascara con solo un 1
-		msk = msk << (data + offset);								//Shifteo la mascara al bit pedido
-		p.portD.W = p.portD.W | msk;								//Y realizo un OR bitwise solo poniendo un uno en el bit que quiero encender
-	}
-	return error;													//Devuelvo si hubo un error
-}																	//POR FAVOR VER LA NOTA AL FINAL DE ESTE ARCHIVO
-
-//Funcion para apagar un bit. Recibe el puerto y el bit. Devuelve TRUE si hubo un error o FALSE si no lo hubo
-static BOOLEAN bitClear (char port, int data){
-	BOOLEAN error = FALSE;											//Variable para almacenar si hay error
-//VERIFICACION DE ENTRADA
-	if (is_a_valid_port(port) == FALSE){							//Veo si el identificador del puerto es valido
-		error = TRUE;												//Si no lo es, hay un error
-	}
-	else if (is_a_valid_bit(port,data) == FALSE){					//Luego veo si el numero de bit que se provee es un bit valido
-		error = TRUE;												//Indico que hubo un error
-	}																//Si el puerto no es valido no tiene sentido ver si el bit lo es. Por eso el else if
-//OPERACION BITCLEAR
-	else{		//Aqui es donde realmente ocurre el borrado pedido. Solo se llega a este caso si los anteriores, que son solo comprobacion, no generaron error
-		int offset = 0;												//Genero un offset para la mascara que va a valer 8 para portA y 0 para los otros
-		if ((port == 'A') || (port == 'a')){						//Asigno el offset
-			offset = 8;
-		}
-		uint16_t msk = 0xFFFE;										//Creo una mascara con todos 1s y solo un cero al final
-		for (unsigned int i = 0; i < (data + offset); i++){			//Shiftear un cero es mas dificil que shiftear unos porque se ingresan ceros por la derecha
-			msk = msk << 1;											//Entonces con un ciclo for shifteo de a una posicion hasta llegar a la posicion pedida
-			p.b0 = 1;												//Y uso las operaciones de struct para ir rellenando con unos cada vez que se shiftea
-		}
-		p.portD.W = p.portD.W & msk;								//Luego realizo un AND bitwise solo poniendo el cero en el bit que quiero apagar
-	}
-	return error;													//Devuelvo si hubo un error
-}																	//POR FAVOR VER LA NOTA AL FINAL DE ESTE ARCHIVO
-
-//Funcion para conmutar un bit. Recibe el puerto y el bit. Devuelve TRUE si hubo un error o FALSE si no lo hubo
-static BOOLEAN bitToggle (char port, int data){
-	BOOLEAN error = FALSE;											//Variable para almacenar si hay error
-//VERIFICACION DE ENTRADA
-	if (is_a_valid_port(port) == FALSE){							//Veo si el identificador del puerto es valido
-		error = TRUE;												//Si no lo es, hay un error
-	}
-	else if (is_a_valid_bit(port,data) == FALSE){					//Luego veo si el numero de bit que se provee es un bit valido
-		error = TRUE;												//Indico que hubo un error
-	}																//Si el puerto no es valido no tiene sentido ver si el bit lo es. Por eso el else if
-//OPERACION BITTOGGLE
-	else{		//Aqui es donde realmente ocurre la conmutacion pedida. Solo se llega a este caso si los anteriores, que son solo comprobacion, no generaron error
-		int offset = 0;												//Genero un offset para la mascara que va a valer 8 para portA y 0 para los otros
-		if ((port == 'A') || (port == 'a')){						//Asigno el offset
-			offset = 8;
-		}
-		uint16_t msk = 1;											//Creo una mascara con solo un 1
-		msk = msk << (data + offset);								//Shifteo la mascara al bit pedido
-		p.portD.W = p.portD.W ^ msk;								//Y realizo un XOR bitwise conmutando solo el bit pedido
-	}	//Para entender esta operacion es util recalcar que la compuerta XOR puede ser vista como un negador controlado de una entrada cuando la otra se pone en 1
-	return error;													//Devuelvo si hubo un error
-}																	//POR FAVOR VER LA NOTA AL FINAL DE ESTE ARCHIVO
-
-/*
-static BOOLEAN bitGet (char port, int data){
-}
-*/
-
-//Funcion para encender todos los bits en estado alto de una mascara. Recibe el puerto y la mascara. Devuelve TRUE si hubo un error o FALSE si no lo hubo
-static BOOLEAN maskOn (char port, int data){
-	BOOLEAN error = FALSE;											//Variable para almacenar si hay error
-//VERIFICACION DE ENTRADA
-	if (is_a_valid_port(port) == FALSE){							//Veo si el identificador del puerto es valido
-		error = TRUE;												//Si no lo es, hay un error
-	}
-	else if (is_a_valid_mask(port,data) == FALSE){					//Luego veo si la mascara es correcta, osea, si tiene sentido para la cantidad de bits del puerto
-		error = TRUE;												//Indico que hubo un error
-	}																//Si el puerto no es valido no tiene sentido ver si la mascara lo es. Por eso el else if
-//OPERACION MASKON
-	else{		//Aqui es donde realmente ocurre el seteo pedido. Solo se llega a este caso si los anteriores, que son solo comprobacion, no generaron error
-	uint8_t msk8 = data;	//Transformo la mascara recibida a uint8_t para poder trabajar con los puertos A y B
-	uint16_t msk16 = data;	//Transformo la mascara recibida a uint16_t para poder trabajar con el puerto D
-		switch (port){
-			case 'A': case 'a':
-				p.portA_byte.B = p.portA_byte.B | msk8;				//Aplico OR bitwise entre todo el byte del puerto y la mascara
-				break;
-			case 'B': case 'b':
-				p.portB_byte.B = p.portB_byte.B | msk8;				//Aplico OR bitwise entre todo el byte del puerto y la mascara
-				break;
-			case 'D': case 'd':
-				p.portD.W = p.portD.W | msk16;						//Aplico OR bitwise entre todo el word del puerto y la mascara
-				break;
-			default:
-				break;		
-		}		
-	}
-	return error;													//Devuelvo si hubo un error
-}
-/*
-static BOOLEAN maskOff (char port, int data){
-}
-*/
-
-/*
-static BOOLEAN maskToggle (char port, int data){
-}
-*/
-
 /*NOTA IMPORTANTE PARA EL PROFESOR:
 Es verdad, la forma en la que el struct esta definido incluye operaciones bit a bit, haciendo p.bX, o p.portD_[low/high]_bit.bX, o directamente
 p.port[A/B]_bit.bX; pero la razon real por la cual hacemos operaciones bit a bit utilizando mascaras y no utilizando todo el potencial que el struct que
 definimos ofrece, es por eficiencia y tamaño del codigo. Si bien en un programa para correr en un compilador es necesario hacer funciones que verifiquen
 que la entrada que dio el usuario sea correcta, cosa que si tuvieramos que correr el programa en un microcontrolador probablemente no se necesitaria en
 ciertos casos, ya que la entrada es mas limitada; lo que no se puede suprimir a la hora de cargar el programa en un microcontrolador real son las funciones
-que hacen que el programa haga lo pedido, y la eficiencia del codigo al correrlo en un microcontrolador, donde los recursos son limitados, puede ser importante.
+que hacen que el programa haga lo pedido, y la eficiencia del codigo al correrlo en un microcontrolador, donde los recursos son limitados, es importante.
 Como las macros se resuelven en tiempo de compilacion, no es posible crear una macro parametrizada que se le de como entrada el numero de bit deseado y que
 "construya" la linea de codigo necesaria para operarlo, por lo que hay dos posibles soluciones para el problema de poder operar sobre cada uno de los 16 bits
 del puerto D y sobre cada uno de los 8 bits de los puertos A y B:
@@ -302,8 +273,8 @@ y hace que el codigo sea larguisimo y terriblemente ineficiente. Pro: se podria 
 Contra: se utiliza poco de todo el poder del struct definido.
 Basado en esto, y dado que el target que supone el ejercicio es un microcontrolador, priorizamos eficiencia frente a la simpleza de poner muchos switch case
 y encender o apagar bits utilizando las operaciones que provee el struct.
-Ahora bien, cabe preguntarse, "por que definieron un struct con tantas formas de utilizacion para usar una o dos? Por la misma razon que incluimos add_operation.
-Al ser una libreria quisimos que sea facilmente actualizable con nuevas funciones, nuevos usos. Esta modularidad heredada del TP8 tiene muchisimo sentido al
+Ahora bien, cabe preguntarse, "por que definieron un struct con tantas formas de utilizacion para usar una o dos? Porque al ser una libreria 
+quisimos que sea facilmente actualizable con nuevas funciones, nuevos usos. Esta modularidad tiene muchisimo sentido al
 considerar que queremos hacer una libreria para manejo de puertos en lugar de un simple programa que haga algo puntual. Pensando en esto, si quisieramos implementar
 una nueva funcion especifica que haga uso de ciertos bytes, bits, o partes puntuales de un puerto, hacer una mascara es, como poco, engorroso. Es por esto que
 decidimos ofrecer mas soporte a la hora de crear nuevas funciones para esta libreria, poniendo a disposicion herramientas para cualquier desarrollo.

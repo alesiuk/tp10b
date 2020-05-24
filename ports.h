@@ -8,9 +8,19 @@ Creado por el grupo 5 en mayo de 2020
 #ifndef PORTS_H
 #define PORTS_H
 
-#include "definitions.h"
+/*HEADERS NECESARIOS*/
+
+#include <stdio.h>
+#include <stdint.h>
+
+/*MACROS DE TIPO DE DATO PERSONALIZADO*/
+
+#define BOOLEAN int
+#define TRUE 1
+#define	FALSE 0
 
 /*ESTRUCTURAS*/
+
 //Estructura bit a bit para puerto de 8 bits (generica)
 typedef struct{
 	uint8_t b0 :1; 
@@ -22,16 +32,18 @@ typedef struct{
 	uint8_t b6 :1;
 	uint8_t b7 :1;
 }port8_bit_t;
+
 //Estructura de byte para puerto de 8 bits (generica)
 typedef struct{
 	uint8_t B;
 }port8_byte_t;
+
 //Estructura para offset que sirve para la union en partes altas
 typedef struct{
     uint8_t unused_offset_byte;
 }unused_byte_t;
 
-//Unica estructura de puertos llamada portD (word, byte y bitfield)
+//Unica estructura de puertos con alias portD (word, byte y bitfield)
 typedef struct{
     union{
 		union{
@@ -100,20 +112,16 @@ p.port[A/B]_byte.B							//PortA/PortB byte
 p.port[A/B]_bit.bX, x en [0,7]				//PortA/Portb bit
 */
 
-/*FUNCION*/
-//Funcion que realiza operaciones sobre los puertos. Recibe un int con el opcode, un char con el puerto que se desea operar, y un int
-//con los datos de la operacion, que pueden ser un numero de bit en el caso de las funciones bitSet, bitClr, bitToggle y bitGet; o
-//una mascara en el caso de las funciones maskOn, maskOff y maskToggle
-BOOLEAN port_operations(int operation, char port, int data);
+/*FUNCIONES*/
 
-/*OPCODES (PARAMETRO OPERATION):
-0 = bitSet
-1 = bitClear
-2 = bitToggle
-3 = bitGet
-4 = maskOn
-5 = maskOff
-6 = maskToggle
-*/
+//Todas las funciones reciben un char con el identificador de puerto, y un int con el numero de bit o la mascara segun corresponda
+//Todas las funciones (excepto bitGet) devuelven TRUE si hubo un error, o FALSE si no hubo errores
+BOOLEAN bitSet (char port, int data);		//Setea (pone en 1) un bit de un puerto determinado
+BOOLEAN bitClear (char port, int data);		//Limpia (pone en 0) un bit de un puerto determinado
+BOOLEAN bitToggle (char port, int data);	//Conmuta el valor de un bit de un puerto determinado
+BOOLEAN bitGet (char port, int data);		//Obtiene el valor de un bit. Devuelve dicho valor si no hubo errores, o -1 si hubo un error
+BOOLEAN maskOn (char port, int data);		//Enciende todos los bits de un puerto segun los bits seteados de una mascara
+BOOLEAN maskOff (char port, int data);		//Apaga todos los bits de un puerto segun los bits seteados de una mascara
+BOOLEAN maskToggle (char port, int data);	//Conmuta todos los bits de un puerto segun los bits seteados de una mascara
 
 #endif
