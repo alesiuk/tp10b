@@ -15,19 +15,19 @@
 #include <stdlib.h>
 #include "ports.h"
 
-
+void testbit (int esperado,int esp , int (* pf)(char prt,int dat), char puerto,int data);                        //Este test se fija si el bit recibido es el esperado
 /*
  * Simple C Test Suite
  */
-/*PROTOTIPOS DE FUNCIONES*/
-BOOLEAN * bitSet (char port, int data);		//Setea (pone en 1) un bit de un puerto determinado
-BOOLEAN * bitClear (char port, int data);		//Limpia (pone en 0) un bit de un puerto determinado
-BOOLEAN * bitToggle (char port, int data);	//Conmuta el valor de un bit de un puerto determinado
-int * bitGet (char port, int data);			//Obtiene el valor de un bit. Devuelve dicho valor si no hubo errores, o -1 si hubo un error
-BOOLEAN * maskOn (char port, int data);		//Enciende todos los bits de un puerto segun los bits seteados de una mascara
-BOOLEAN * maskOff (char port, int data);		//Apaga todos los bits de un puerto segun los bits seteados de una mascara
-BOOLEAN * maskToggle (char port, int data);	//Conmuta todos los bits de un puerto segun los bits seteados de una mascara
-
+/*PROTOTIPOS DE FUNCIONES*/ /*
+BOOLEAN * PbitSet (char port, int data);		//Setea (pone en 1) un bit de un puerto determinado
+BOOLEAN * PbitClear (char port, int data);		//Limpia (pone en 0) un bit de un puerto determinado
+BOOLEAN * PbitToggle (char port, int data);	//Conmuta el valor de un bit de un puerto determinado
+int * PbitGet (char port, int data);			//Obtiene el valor de un bit. Devuelve dicho valor si no hubo errores, o -1 si hubo un error
+BOOLEAN * PmaskOn (char port, int data);		//Enciende todos los bits de un puerto segun los bits seteados de una mascara
+BOOLEAN * PmaskOff (char port, int data);		//Apaga todos los bits de un puerto segun los bits seteados de una mascara
+BOOLEAN * PmaskToggle (char port, int data);	//Conmuta todos los bits de un puerto segun los bits seteados de una mascara
+*/
 /*VARIABLES*/
 int testpass, testfail, testpassglo, testfailglo; //creo estas varibles que son las quevan a contabilizar la cantidad de test que pasaron o fallaron 
                                                   //las distintas funciones y el total de las pruebas.
@@ -42,72 +42,72 @@ int main(int argc, char** argv) {
     testbitset(0x8000,TRUE,'A', 16);*/
     printf("%%TEST_STARTED%%  testbitSet  (test)\n");
     p.portD.W = 0;
-    testbit(FALSE,0x2, bitSet, 'b',1);
-    testbit(TRUE,0x2,bitSet,'b',12);
-    testbit(TRUE,0x4,bitSet,'f',2);
+    testbit(FALSE,0x2, &bitSet, 'b',1);
+    testbit(TRUE,0x2,&bitSet,'b',12);
+    testbit(TRUE,0x4,&bitSet,'f',2);
     p.portD.W = 0;
-    testbit(FALSE,0x8000,'d',15);
-    testbit(TRUE,0x8000,'A',16);
+    testbit(FALSE,0x8000,&bitSet,'d',15);
+    testbit(TRUE,0x8000,&bitSet,'A',16);
     
     printf("%%TEST_STARTED%%  testbitClr  (test)\n");
     p.portD.W = 0xFFFF;
-    testbit(FALSE,0xFFFE,bitClear,'D',0);
-    testbit(TRUE,0xFFFE,bitClear,'d',17);
-    testbit(TRUE,0xFFFE,bitClear,'F',0);
-    testbit(TRUE,0xE,bitClear,'a',-1);
-    testbit(FALSE,0x7FFE,bitClear,'A',7);
+    testbit(FALSE,0xFFFE,&bitClear,'D',0);
+    testbit(TRUE,0xFFFE,&bitClear,'d',17);
+    testbit(TRUE,0xFFFE,&bitClear,'F',0);
+    testbit(TRUE,0xE,&bitClear,'a',-1);
+    testbit(FALSE,0x7FFE,&bitClear,'A',7);
     
     printf("%%TEST_STARTED%%  testbitGet  (test)\n");
-    testbit(FALSE,0,bitGet,'a',7);                      //se busca que el resultado sea correcto
-    testbit(TRUE,0,bitGet,'d',-1);                     	
-    testbit(FALSE,1,bitGet,'d',3);
-    testbit(TRUE,1,bitGet,'b',8);
-    testbit(TRUE,1,bitGet,'j',0);                       
+    testbit(FALSE,0,&bitGet,'a',7);                      //se busca que el resultado sea correcto
+    testbit(TRUE,0,&bitGet,'d',-1);                     	
+    testbit(FALSE,1,&bitGet,'d',3);
+    testbit(TRUE,1,&bitGet,'b',8);
+    testbit(TRUE,1,&bitGet,'j',0);                       
     
     printf("%%TEST_STARTED%%  testbitToggle  (test)\n");
     p.portD.W=0x8888;				//1000 1000 1000 1000
-    testbit(FALSE,0x0888,bitToggle,'a',7);		//se busca que el resultado sea correcto
-    testbit(FALSE,0x8888,bitToggle,'d',15);		
-    testbit(FALSE,0x8880,bitToggle,'b',3);	
-    testbit(TRUE,0x8880,bitToggle,'d',-1);		//se busca que falle porque se paso un numero de bit invalido		    
-    testbit(TRUE,0x8880,bitToggle,'a',15);
-    testbit(TRUE,0x8880,bitToggle,'b',69);
-    testbit(TRUE,0x8880,bitToggle,'f',8);	        //se busca que falle porque se paso un puerto invalido
+    testbit(FALSE,0x0888,&bitToggle,'a',7);		//se busca que el resultado sea correcto
+    testbit(FALSE,0x8888,&bitToggle,'d',15);		
+    testbit(FALSE,0x8880,&bitToggle,'b',3);	
+    testbit(TRUE,0x8880,&bitToggle,'d',-1);		//se busca que falle porque se paso un numero de bit invalido		    
+    testbit(TRUE,0x8880,&bitToggle,'a',15);
+    testbit(TRUE,0x8880,&bitToggle,'b',69);
+    testbit(TRUE,0x8880,&bitToggle,'f',8);	        //se busca que falle porque se paso un puerto invalido
 
     printf("%%TEST_STARTED%%  testmaskOn  (test)\n");
     p.portD.W=0xAAAA;					//1010 1010 1010 1010
-    testbit(FALSE,0xEEEE,maskOn,'D',0x4444);		//se busca que el resultado sea correcto
-    testbit(FALSE,0xFFEE,maskOn,'a',0x11);				
-    testbit(FALSE,0xFFFF,maskOn,'B',0x11);
-    testbit(FALSE,0xFFFF,maskOn,'D',0xAA00);		
+    testbit(FALSE,0xEEEE,&maskOn,'D',0x4444);		//se busca que el resultado sea correcto
+    testbit(FALSE,0xFFEE,&maskOn,'a',0x11);				
+    testbit(FALSE,0xFFFF,&maskOn,'B',0x11);
+    testbit(FALSE,0xFFFF,&maskOn,'D',0xAA00);		
     p.portD.W=0x0000;						//defino de nuevo, para  poder corroborar que no modifica ninguno de los bits de los puertos
-    testbit(TRUE,0x0000,maskOn,'d',0xFFFFF);		//se busca que falle porque se paso una mascara  invalida		    
-    testbit(TRUE,0x0000,maskOn,'A',0x12234);
-    testbit(TRUE,0x0000,maskOn,'b',0xAEEEA);		
-    testbit(TRUE,0x0000,maskOn,'f',0xAAAA);	        //se busca que falle porque se paso un puerto invalido   
+    testbit(TRUE,0x0000,&maskOn,'d',0xFFFFF);		//se busca que falle porque se paso una mascara  invalida		    
+    testbit(TRUE,0x0000,&maskOn,'A',0x12234);
+    testbit(TRUE,0x0000,&maskOn,'b',0xAEEEA);		
+    testbit(TRUE,0x0000,&maskOn,'f',0xAAAA);	        //se busca que falle porque se paso un puerto invalido   
  
     printf("%%TEST_STARTED%%  testmaskOff  (test)\n");
     p.portD.W=0xAAAA;					//1010 1010 1010 1010
-    testbit(FALSE,0x8888,maskOff,'D',0x2222);		//se busca que el resultado sea correcto
-    testbit(FALSE,0x0088,maskOff,'a',0x88);				
-    testbit(FALSE,0x0000,maskOff,'B',0x88);
-    testbit(FALSE,0x0000,maskOff,'D',0xFFFF);	
+    testbit(FALSE,0x8888,&maskOff,'D',0x2222);		//se busca que el resultado sea correcto
+    testbit(FALSE,0x0088,&maskOff,'a',0x88);				
+    testbit(FALSE,0x0000,&maskOff,'B',0x88);
+    testbit(FALSE,0x0000,&maskOff,'D',0xFFFF);	
     p.portD.W=0xFFFF;					// lo defino de nuevo, para poder corroborar que no  modifique ninguno de los bits de los puertos
-    testbit(TRUE,0xFFFF,maskOff,'d',0xFFFFA);		//se busca que falle porque se paso una mascara  invalida		    
-    testbit(TRUE,0xFFFF,maskOff,'A',0x12234);
-    testbit(TRUE,0xFFFF,maskOff,'b',0xAEEEA);		
-    testbit(TRUE,0xFFFF,maskOff,'f',0xAAAA);	        //se busca que falle porque se paso un puerto invalido       
+    testbit(TRUE,0xFFFF,&maskOff,'d',0xFFFFA);		//se busca que falle porque se paso una mascara  invalida		    
+    testbit(TRUE,0xFFFF,&maskOff,'A',0x12234);
+    testbit(TRUE,0xFFFF,&maskOff,'b',0xAEEEA);		
+    testbit(TRUE,0xFFFF,&maskOff,'f',0xAAAA);	        //se busca que falle porque se paso un puerto invalido       
 
     printf("%%TEST_STARTED%%  testmaskToggle  (test)\n");
     p.portD.W=0xAAAA;						//1010 1010 1010 1010
-    testbit(FALSE,0x8888,maskOff,'D',0x2222);		//se busca que el resultado sea correcto
-    testbit(FALSE,0xAA88,maskOff,'a',0x22);				
-    testbit(FALSE,0xAAAA,maskOff,'B',0x22);
-    testbit(FALSE,0x5555,maskOff,'D',0xFFFF);	
-    testbit(TRUE,0x5555,maskOff,'d',0xFFFFA);		//no tiene que poder modificar los bits de los puertos por eso lo esperado siempre es 0x5555		    
-    testbit(TRUE,0x5555,maskOff,'A',0x12234);		//se busca que falle porque se paso una mascara  invalida	
-    testbit(TRUE,0x5555,maskOff,'b',0xAEEEA);		
-    testbit(TRUE,0x5555,maskOff,'f',0xAAAA);	        //se busca que falle porque se paso un puerto invalido  
+    testbit(FALSE,0x8888,&maskOff,'D',0x2222);		//se busca que el resultado sea correcto
+    testbit(FALSE,0xAA88,&maskOff,'a',0x22);				
+    testbit(FALSE,0xAAAA,&maskOff,'B',0x22);
+    testbit(FALSE,0x5555,&maskOff,'D',0xFFFF);	
+    testbit(TRUE,0x5555,&maskOff,'d',0xFFFFA);		//no tiene que poder modificar los bits de los puertos por eso lo esperado siempre es 0x5555		    
+    testbit(TRUE,0x5555,&maskOff,'A',0x12234);		//se busca que falle porque se paso una mascara  invalida	
+    testbit(TRUE,0x5555,&maskOff,'b',0xAEEEA);		
+    testbit(TRUE,0x5555,&maskOff,'f',0xAAAA);	        //se busca que falle porque se paso un puerto invalido  
 #ifdef ENABLE_DDR
     DDR.portD = 0x8888;						//1000 1000 1000 1000 los bits 0 se son entradas,modificables
     printf("%%TEST_STARTED%%  testENABLE_DDR  (test)\n");
@@ -154,12 +154,12 @@ void testbit (int esperado,int esp , int (* pf)(char prt,int dat), char puerto,i
 {
     
 
-    static n;
+    static int n;
     static int testpass; 
     static int testfail;
     int valid;
     n++;
-    valid = *pf(puerto, data);
+    valid = (* pf)(puerto, data);
     
     if (esperado == valid)
     {
